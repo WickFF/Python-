@@ -1,0 +1,104 @@
+# coding=gbk
+from tkinter import *
+import re
+import requests
+
+class lwl(object):
+    def __init__(self):
+        # 创建主体
+        self.root = Tk()
+
+        # 主题标题
+        self.root.title("扫描")
+
+        # 设置主体大小
+        self.root.geometry('800x600')
+
+        self.Url = Label(self.root,text='Url地址:')
+
+        # 定义存储主体显示的url的全局变量
+        self.print_text = list()
+
+        # 定义变量取文本框的值
+        self.url = StringVar()
+
+        # url输入框
+        self.user_text = Entry(self.root,textvariable = self.url)
+
+        # 设置显示输出
+        self.Print_text = Listbox(self.root)
+
+        # 设置两个按钮指向特定函数
+        self.scanning_button = Button(self.root,command = self.Scanning_url,text = '扫描',width = 5)
+        self.Export_button = Button(self.root, command=self.Export_url, text='导出', width=5)
+
+        # 禁止更大大小
+        self.root.resizable(0,0)
+
+    # 设置文本框和按钮大小，布局
+    def Gui(self):
+        self.Url.place(x = 5, y = 10)
+        self.user_text.place(width = 420,x = 60, y = 10)
+        self.scanning_button.place(x = 570, y = 5)
+        self.Export_button.place(x = 680, y= 5)
+        self.Print_text.place(height = 520,width = 500,x = 40, y = 60)
+
+    def Scanning_url(self):
+
+        # 列表显示框清屏
+        self.Print_text.delete(0, END)
+
+        # 获取输入的url地址
+        Url = self.url.get()
+
+        # 检测url是否包含http://头
+        if Url.startswith('http://'):
+
+            # 发起网络请求
+            Net = requests.get(Url)
+
+            # 获取html源代码
+            data = Net.text
+        else:
+            Net = requests.get('http://' + Url)
+            data = Net.text
+
+            # 正则表达式滤出url地址
+        url_list = re.findall(r'(?<=href=\").+?(?=\")|(?<=href=\').+?(?=\')', data)
+
+        # 打印获取的url地址
+        for url in url_list:
+            self.print_text.append(url)
+            print(url)
+
+        # 输出到主题文本框内
+        for item in url_list:
+            self.Print_text.insert(0,item)
+
+    def Export_url(self):
+        Url = self.url.get()
+        if Url.startswith('http://'):
+            Net = requests.get(Url)
+            data = Net.text
+        else:
+            Net = requests.get('http://' + Url)
+            data = Net.text
+        url_list = re.findall(r'(?<=href=\").+?(?=\")|(?<=href=\').+?(?=\')', data)
+
+        # 把获取的url地址写入txt文档中
+        with open('url采集.txt', 'w+') as l:
+            for url in url_list:
+                l.write(url+'\n')
+
+
+def main():
+    # 初始化
+    LWL = lwl()
+    # 进行布局
+    LWL.Gui()
+    #  执行主程序
+    mainloop()
+
+
+if __name__ == '__main__':
+    main()
